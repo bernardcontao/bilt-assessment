@@ -29,7 +29,8 @@ public class RewardsEngine {
     }
 
     public PointsResult processPayment(PaymentEvent event, MemberAccount member) {
-        if (processedEventStore.isDuplicate(event.getEventId())) {
+        boolean isProcessable = processedEventStore.markIfNew(event.getEventId());
+        if (!isProcessable) {
             return new PointsResult(member.getMemberId(), 0, ProcessingOutcome.DUPLICATE);
         }
 
@@ -43,7 +44,6 @@ public class RewardsEngine {
         long pointsToAward = Math.min(pointsWithBonus, remainingCap);
 
         member.addPointsForMonth(month, pointsToAward);
-        processedEventStore.markProcessed(event.getEventId());
 
         ProcessingOutcome outcome = pointsToAward == 0
                 ? ProcessingOutcome.CAPPED
