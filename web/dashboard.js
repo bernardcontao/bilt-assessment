@@ -6,16 +6,41 @@ const toneClasses = {
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 
+const outcomeView = {
+  AWARDED: {
+    title(result) {
+      return `${numberFormatter.format(result.pointsAwarded)} points credited`;
+    },
+    description: "Your rent payment was processed successfully.",
+    tone: "success",
+  },
+  DUPLICATE: {
+    title() {
+      return "Duplicate event skipped";
+    },
+    description: "This payment event was already processed.",
+    tone: "neutral",
+  },
+  CAPPED: {
+    title() {
+      return "Monthly cap reached";
+    },
+    description: "No additional points were credited for this payment.",
+    tone: "warning",
+  },
+};
+
 export function buildViewModel(result, member) {
   const progressPercent = Math.min(
     100,
     (member.pointsThisMonth / member.monthlyCap) * 100,
   );
+  const outcome = outcomeView[result.outcome] ?? outcomeView.AWARDED;
 
   return {
-    title: `${numberFormatter.format(result.pointsAwarded)} points credited`,
-    description: "Your rent payment was processed successfully.",
-    tone: "success",
+    title: outcome.title(result),
+    description: outcome.description,
+    tone: outcome.tone,
     progressPercent,
   };
 }
